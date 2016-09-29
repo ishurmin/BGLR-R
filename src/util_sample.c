@@ -6,6 +6,39 @@
 #include <R_ext/Lapack.h>
 
 /*
+ * This is a function-wrapper around BLAS subroutine dgemv
+ */
+SEXP dgemvWrapper(SEXP rows, SEXP cols, SEXP mat, SEXP vec)
+{
+    int             m, n, lda, inc = 1;
+    double          alpha = 1.0, beta = 1.0;
+    double          *a, *x, *pY;
+    char trans = 'N';
+
+    m = INTEGER_VALUE(rows);
+    lda = INTEGER_VALUE(rows);
+    n = INTEGER_VALUE(cols);
+
+    PROTECT(mat = AS_NUMERIC(mat));
+    a = NUMERIC_POINTER(mat);
+
+    PROTECT(vec = AS_NUMERIC(vec));
+    x = NUMERIC_POINTER(vec);
+
+    SEXP y = PROTECT(allocVector(REALSXP, m));
+    memset(REAL(y), 0, m * sizeof(double));
+
+    PROTECT(y = AS_NUMERIC(y));
+    pY = NUMERIC_POINTER(y);
+
+    F77_NAME(dgemv)(&trans, &m, &n, &alpha, a, &lda, x, &inc, &beta, pY, &inc);
+
+    UNPROTECT(4);
+
+    return y;
+}
+
+/*
  * This is a generic function to sample betas in various models, including 
  * Bayesian LASSO, BayesA, Bayesian Ridge Regression, etc.
  

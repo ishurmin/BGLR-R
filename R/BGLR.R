@@ -514,6 +514,9 @@ setLT.RKHS=function(LT,y,n,j,weights,saveAt,R2,nLT,rmExistingFiles,verbose)
     LT$levelsU = sum(tmp)
     LT$d = LT$d[tmp]
     LT$V = LT$V[, tmp]
+    LT$V_rows = nrow(LT$V)
+	LT$V_cols = ncol(LT$V)
+    LT$Vt = t(LT$V)
     
     #Default degrees of freedom and scale parameter associated with the variance component for marker effect
     if (is.null(LT$df0)) 
@@ -1357,14 +1360,14 @@ BGLR=function (y, response_type = "gaussian", a = NULL, b = NULL,
                 if (ETA[[j]]$model == "RKHS") {
                   #error
                   e = e + ETA[[j]]$u
-                  rhs = crossprod(ETA[[j]]$V, e)/varE
+                  rhs = as.matrix(.Call("dgemvWrapper", ETA[[j]]$V_cols, ETA[[j]]$V_rows, ETA[[j]]$Vt, e)) / varE
                   varU = ETA[[j]]$varU * ETA[[j]]$d
                   C = as.numeric(1/varU + 1/varE)
                   SD = 1/sqrt(C)
                   sol = rhs/C
                   tmp = rnorm(n = ETA[[j]]$levelsU, mean = sol, sd = SD)
                   ETA[[j]]$uStar = tmp
-                  ETA[[j]]$u = as.vector(ETA[[j]]$V %*% tmp)
+                  ETA[[j]]$u = .Call("dgemvWrapper", ETA[[j]]$V_rows, ETA[[j]]$V_cols, ETA[[j]]$V, tmp)
 		  
                   #update error
                   e = e - ETA[[j]]$u
