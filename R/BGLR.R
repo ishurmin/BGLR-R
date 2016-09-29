@@ -514,6 +514,7 @@ setLT.RKHS=function(LT,y,n,j,weights,saveAt,R2,nLT,rmExistingFiles,verbose)
     LT$levelsU = sum(tmp)
     LT$d = LT$d[tmp]
     LT$V = LT$V[, tmp]
+    LT$Vt = t(LT$V)
     
     #Default degrees of freedom and scale parameter associated with the variance component for marker effect
     if (is.null(LT$df0)) 
@@ -1364,7 +1365,7 @@ BGLR=function (y, response_type = "gaussian", a = NULL, b = NULL,
                   sol = rhs/C
                   tmp = rnorm(n = ETA[[j]]$levelsU, mean = sol, sd = SD)
                   ETA[[j]]$uStar = tmp
-                  ETA[[j]]$u = as.vector(ETA[[j]]$V %*% tmp)
+                  ETA[[j]]$u = as.vector(crossprod(ETA[[j]]$Vt, tmp))
 		  
                   #update error
                   e = e - ETA[[j]]$u
